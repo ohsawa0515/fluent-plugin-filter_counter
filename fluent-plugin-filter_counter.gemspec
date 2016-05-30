@@ -3,14 +3,14 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
-  spec.name          = "fluent-plugin-filter_counter"
+  spec.name          = "fluent-plugin-grepcount-filter"
   spec.version       = "0.0.1"
   spec.authors       = ["Shuichi Ohsawa"]
   spec.email         = ["ohsawa0515@gmail.com"]
 
   spec.summary       = %q{Fluentd filter plugin to count matched messages and stream if exceed the threshold.}
   spec.description   = %q{Fluentd filter plugin to count matched messages and stream if exceed the threshold.}
-  spec.homepage      = "https://github.com/ohsawa0515/fluent-plugin-filter_counter"
+  spec.homepage      = "https://github.com/ohsawa0515/fluent-plugin-grepcount-filter"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }

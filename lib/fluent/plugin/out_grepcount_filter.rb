@@ -1,6 +1,6 @@
 module Fluent
-  class CounterFilter < Output
-    Plugin.register_output('counter', self)
+  class GrepCountFilterOutput < Output
+    Plugin.register_output('grepcount_filter', self)
 
     REGEXP_MAX_NUM = 20
 
