@@ -9,6 +9,7 @@ module Fluent
     config_param :count_interval, :time, :default => 60,
                  :desc => 'The interval time to count in seconds.'
     config_param :threshold, :integer, :defalut => 1
+    config_param :output_setting, :bool, :default => false
 
     attr_accessor :interval
     attr_accessor :watcher
@@ -69,10 +70,15 @@ module Fluent
     def flush_emit
       output = nil
       if @last_count >= @threshold
-        placeholder_values = {
-          "count"  => @last_count,
-        }
-        output = reform(@last_record, placeholder_values)
+        output = @last_record
+        if @output_setting
+          placeholder_values = {
+            "count"     => @last_count,
+            "interval"  => @interval,
+            "threshold" => @threshold
+          }
+          output = reform(@last_record, placeholder_values)
+        end
       end
       router.emit(@last_tag, @last_checked, output)
       @count = @last_count = 0
