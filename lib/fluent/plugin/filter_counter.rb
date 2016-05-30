@@ -1,6 +1,6 @@
 module Fluent
-  class CounterFilter < Filter
-    Plugin.register_filter('counter', self)
+  class CounterFilter < Output
+    Plugin.register_output('counter', self)
 
     REGEXP_MAX_NUM = 20
 
@@ -15,6 +15,8 @@ module Fluent
     attr_accessor :count
     attr_accessor :last_checked
     attr_accessor :last_count
+    attr_accessor :last_tag
+    attr_accessor :last_record
 
     def configure(conf)
       super
@@ -53,23 +55,34 @@ module Fluent
     end
 
     def watch
-      @last_checked ||= Fluent::Engine.now
+      @last_checked ||= Engine.now
       while true
         sleep 0.5
-        if Fluent::Engine.now - @last_checked >= @interval
-          @last_checked = Fluent::Engine.now
+        if Engine.now - @last_checked >= @interval
+          @last_checked = Engine.now
           @last_count = @count
-          @count = 0
+          flush_emit
         end
       end
     end
 
-    def filter_stream(tag, es)
-      @count += 1
-      matched = false
-      new_es = MultiEventStream.new
+    def flush_emit
+      output = nil
+      if @last_count >= @threshold
+        placeholder_values = {
+          "count"  => @last_count,
+        }
+        output = reform(@last_record, placeholder_values)
+      end
+      router.emit(@last_tag, @last_checked, output)
+      @count = @last_count = 0
+    end
 
+    def emit(tag, es, chain)
+      matched = false
       es.each { |time, record|
+
+        # grep filtering
         catch(:break_loop) do
           @regexps.each do |key, regexp|
             throw :break_loop unless match(regexp, record[key].to_s)
@@ -84,25 +97,11 @@ module Fluent
           next
         end
 
-        if @last_count < @threshold
-          next
-        end
-
-        count = @last_count
-        placeholder_values = {
-          "count"  => count,
-        }
-        new_record = reform(record, placeholder_values)
-
-        begin
-          new_es.add(time, new_record)
-          @count = @last_count = 0
-          @is_stream = false
-        rescue => e
-          router.emit_error_event(tag, time, record, e)
-        end
+        @count += 1
+        @last_tag = tag
+        @last_record = record
       }
-      new_es
+      chain.next
     end
 
     def match(regexp, string)
