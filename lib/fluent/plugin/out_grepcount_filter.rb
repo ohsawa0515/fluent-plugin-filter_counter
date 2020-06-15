@@ -8,7 +8,7 @@ module Fluent
     (1..REGEXP_MAX_NUM).each {|i| config_param :"exclude#{i}", :string, :default => 1}
     config_param :count_interval, :time, :default => 60,
                  :desc => 'The interval time to count in seconds.'
-    config_param :threshold, :integer, :defalut => 1
+    config_param :threshold, :integer, :default => 1
     config_param :output_setting, :bool, :default => false
 
     attr_accessor :interval
